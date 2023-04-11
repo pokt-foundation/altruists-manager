@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+  <table class="table">
+    <thead>
+      <tr>
+        {% if request.user.is_superuser %}
+        <th>Owner</th>
+        {% endif %}
+        <th>Chain ID</th>
+        <th>Altruist URL</th>
+        <th># of served 5min sessions in the last hour</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+
+{% for o in object_list %}
+      <tr>
+        {% if request.user.is_superuser %}
+        <td>{{ o.owner }}</td>
+        {% endif %}
+        <td>
+        {% if request.user.is_superuser %}
+          <a href="{% url 'manager:altruist-by-chain' o.chain_id.id %}" alt="Altruists of the {{ o.chain_id }}">{{ o.chain_id }}</a>
+        {% else %}
+          {{ o.chain_id }}
+        {% endif %}
+
+          </td>
+        <td>
+        {% if request.user.is_superuser and o.owner.is_superuser or request.user == o.owner  %}
+          <a href="{% url 'manager:altruist-update' o.id %}">{{ o.url }}</a>
+        {% else %}
+          {{ o.url }}
+        {% endif %}
+        </td>
+        <td>
+          <a href="{% url 'manager:altruist-detail' o.id 1 %}">{{ o.last_hour_sessions_number  }}</a>
+        </td>
+        <td>
+          {% if request.user.is_superuser and o.owner.is_superuser or request.user == o.owner %}
+          <a href="{% url 'manager:altruist-delete' o.id %}" class="glyphicon glyphicon-remove" style="color:red" title="Delete {{ o.url }}">
+            <span class="material-icons">delete</span></a>
+          {% endif %}
+          <a href="{% url 'manager:altruist-runtest' o.id %}" class="glyphicon glyphicon-fact_check" style="color:blue" title="Validate {{ o.url }}">
+            <span class="material-icons">fact_check</span></a>
+        </td>
+      </tr>
+
+{% empty %}
+<tr>
+    <td colspan="5">No altruists yet.</td>
+</tr>
+{% endfor %}
+    </tbody>
+
+  </table>
+</div>
+
+
+{% endblock %}

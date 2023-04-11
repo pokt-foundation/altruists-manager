@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+
+<form action="" method="post">{% csrf_token %}
+  <div class="form-group">
+  {{ form | crispy }}
+  </div>
+    <input type="submit" class="btn btn-primary" value="Save" />
+</form>
+<a href="{% url 'manager:user-passwd' %}">Change password</a>
+
+{% endblock %}

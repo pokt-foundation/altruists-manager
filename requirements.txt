@@ -1,0 +1,8 @@
+psycopg2
+Django
+django-bootstrap5
+crispy-bootstrap5
+djangorestframework
+jinja2
+kubernetes
+requests

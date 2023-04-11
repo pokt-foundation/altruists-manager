@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {# Load the tag library #}
+    {% load django_bootstrap5 %}
+
+    {# Load CSS and JavaScript #}
+    {% bootstrap_css %}
+    {% bootstrap_javascript %}
+
+    {# Display django.contrib.messages as Bootstrap alerts #}
+    {% bootstrap_messages %}
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+    {% block extra_libs %}{% endblock %}
+
+    <title>Altruists manager</title>
+
+</head>
+<body>
+    {% include 'navbar.html' %}
+
+    {% block js %}{% endblock js %}
+
+    <div class="content-fluid container mt-4">
+
+    {% block policy %}
+    <div class="alert alert-warning" role="alert">
+        <h4>Current policy to select altruist:</h4>
+        <ol>
+            <li> IF Community Chains(CC) provides an altruist for the given chain </li>
+            <li> AND the CC altruist is healthy, then use it as the altruist for the next 5 min. </li>
+            <li> ELSE select a healthy altruist from all available for the chain, with the least 
+                number of served sessions within the last hour. </li>
+        </ol>
+    </div>
+    {% endblock policy %}
+
+    {% block content %}
+
+    {% endblock content %}
+    </div>
+</body>
+</html>

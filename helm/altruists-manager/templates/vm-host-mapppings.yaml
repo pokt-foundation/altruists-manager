@@ -1,0 +1,27 @@
+{{- if .Values.victoriaMetricsHost -}}
+kind: Host
+apiVersion: getambassador.io/v3alpha1
+metadata:
+  name: {{ include "altruists-manager.fullname" . }}-vm
+  annotations:
+    external-dns.ambassador-service: emissary-ingress.emissary-ingress
+spec:
+  hostname: {{ .Values.victoriaMetricsHost }}
+  tlsSecret:
+    name: {{ .Values.tlsSecret }}
+    namespace: emissary-ingress
+---
+kind: Mapping
+apiVersion: getambassador.io/v3alpha1
+metadata:
+  name: {{ include "altruists-manager.fullname" . }}-vm
+spec:
+  prefix: /od0rkg72j4m5/
+  hostname: {{ .Values.victoriaMetricsHost }}
+  service: victoria-metrics:8428
+  resolver: endpoint
+  # add_request_headers:
+  #   x-forwarded-proto:
+  #     value: "https"
+  #     append: True
+{{- end }}

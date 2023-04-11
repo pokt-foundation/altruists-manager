@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+
+{% load filters %}
+
+{% block extra_libs %}
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.css" />
+<script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.js"></script>
+{% endblock %}
+
+{% block content %}
+  <h2>Billing data for {{start_date}} - {{finish_date}}:</h2>
+
+  <table id="billing-table">
+    <thead>
+      <tr>
+        <th>Chain</th>
+        <th>Owner</th>
+        <th>Altruist URL</th>
+        <th>CC altruists / Total altruists</th>
+        <th>Total served(seconds)</th>
+        <th>Percentage</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for o in total_by_altruist %}
+        <tr>
+          <td>{{ o.chain }}</td>
+          <td>{{ o.owner }}</td>
+          <td>{{ o.url | safeURL }}</td>
+          <td>{{o.cc_altruist}}/{{ o.total_altruists }}</td>
+          <td>{{ o.total_duration }}</td>
+          <td>{{ o.total_ratio  | floatformat:"2" }} %</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% endblock %}
+
+{% block js %}
+<script>
+  $(document).ready(function() {
+    // Add sorting to the table
+    $('#billing-table').DataTable({
+      // "paging": false,
+      pageLength: 25, // Set number of lines per page to 10
+      language: {
+        search: "Filter:" // Change the title of the search box to "Filter:"
+      },
+    });
+
+    // Add filtering to the table
+    var table = $('#billing-table').DataTable();
+    $('#search-input').on('keyup', function() {
+      table.search(this.value).draw();
+    });
+
+    // Add sorting to the table by URL and chain columns
+
+    $('#billing-table thead input').on('keyup change', function() {
+      table.column($(this).parent().index() + ':visible')
+        .search(this.value)
+        .draw();
+    });
+  });
+</script>
+{% endblock %}

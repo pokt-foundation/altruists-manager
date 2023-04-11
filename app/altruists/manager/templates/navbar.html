@@ -1,0 +1,45 @@
+{% load filters %}
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+  <div class="container-fluid">
+    <a class="navbar-brand h1" href="#">{% block title %}Altruists manager{% endblock %}</a>
+    <div class="collapse navbar-collapse" id="navbarNavDropdown">
+      <ul class="navbar-nav">
+      {% if user.is_authenticated %}
+      <li class="nav-item active"><a class="nav-link" href="{% url 'manager:chain-list' %}">Chains</a></li>
+      <li class="nav-item active"><a class="nav-link" href="{% url 'manager:altruist-list' %}">Altruists</a></li>
+      <li class="nav-item active"><a class="nav-link" href="{% url 'manager:altruist-add' %}">Add altruists</a></li>
+      {% endif %}
+      {% if request.user.is_superuser %}
+      <li class="nav-item active"><a class="nav-link" href="{% url 'manager:chain-add' %}">Add chain</a></li>
+      {% endif %}
+      </ul>
+
+      <ul class="navbar-nav ms-auto">
+        {% if user.is_authenticated %}
+
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            Billing reports
+          </a>
+          <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+            {% n_ago_first 0 as mon_f %}
+            {% n_ago_last 0 as mon_l %}
+            <li><a class="dropdown-item" href="{% url 'manager:altruist-billing' start_date=mon_f finish_date=mon_l %}">Current months</a></li>
+            {% n_ago_first 1 as mon_f %}
+            {% n_ago_last 1 as mon_l %}
+            <li><a class="dropdown-item" href="{% url 'manager:altruist-billing' start_date=mon_f finish_date=mon_l %}">Previous months</a></li>
+            {% n_ago_first 2 as mon_f %}
+            {% n_ago_last 2 as mon_l %}
+            <li><a class="dropdown-item" href="{% url 'manager:altruist-billing' start_date=mon_f finish_date=mon_l %}">2 months ago</a></li>
+          </ul>
+        </li>
+
+        <li class="nav-item active"><a class="nav-link" href="{% url 'manager:user-profile' %}" class="top-menu">Profile ({{ user.username }})</a></li>
+        <li class="nav-item active"><a class="nav-link" href="{% url 'logout' %}" class="top-menu">Logout</a></li>
+        {% else %}
+        <li class="nav-item active"><a class="nav-link" href="{% url 'login' %}" class="top-menu">Login</a></li>
+        {% endif %}
+        </ul>
+    </div>
+  </div>
+</nav>

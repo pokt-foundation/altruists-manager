@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<p>Node's chain: {{altruist.chain_id}}</p>
+<p>Node's URL:
+{% if not request.user.is_superuser %}
+<a href="{% url 'manager:altruist-update' altruist.id %}">Edit {{ altruist.url | safe }}</a>
+{% else %}
+{{ altruist.url | safe }}
+{% endif %}
+</p>
+
+<button onclick="location.reload()" type="button" class="btn btn-primary">Re-run the test</button>
+</br></br>
+<div class="alert alert-warning" role="alert">
+  Minimum requirements for an altruist to be selected into the rotation are:
+  <ul class="list-group list-group-flush" role="alert">
+    <li class="list-group-item">probe_success == 1.0 (Means that the tests were successfuly performed)</li>
+    <li class="list-group-item">node_syncing == 0.0 (Means that the node is fully synced)</li>
+  </ul>
+</div>
+
+<p>Executed test metrics:</p>
+<pre>
+{{nodes_response.content}}
+</pre>
+
+
+{% endblock %}

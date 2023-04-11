@@ -1,0 +1,4 @@
+flask
+gunicorn[gthread]
+prometheus_client
+requests

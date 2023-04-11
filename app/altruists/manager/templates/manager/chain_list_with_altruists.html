@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+
+{% load filters %}
+
+{% block content %}
+<div class="container">
+  <table class="table table-bordered table-hover">
+    <thead class="thead-dark">
+      <tr>
+        <th>Chain id</th>
+        <th>Chain name</th>
+        <th>Altruists</th>
+      </tr>
+    </thead>
+    <tbody>
+
+{% for o in object_list %}
+  {% if o.altruist_set.all|length < 1 %}
+      <tr class="table-danger">
+  {% elif o.altruist_set.all|length < 2 %}
+      <tr class="table-warning">
+  {% else %}
+      <tr>
+  {% endif %}
+        <td>
+          <a href="{% url 'manager:chain-update' o.id %}">{{ o.chain_id }}</a>
+        </td>
+        <td>{{ o.chain_name }}</td>
+        <td>
+          <table style="width:100%">
+          {% for a in o.altruist_set.all %}
+          <tr>
+            <td style="width:15%">
+              {% if a.owner.is_superuser %}
+                PNI
+              {% else %}
+                {{ a.owner }}
+              {% endif %}
+              </td>
+              <td>{{ a.url | safeURL }}</td>
+            </tr>
+          {% endfor %}
+          </table>
+        </td>
+      </tr>
+
+{% empty %}
+<tr>
+    <td colspan="3">No chains yet.</td>
+</tr>
+{% endfor %}
+    </tbody>
+
+  </table>
+</div>
+
+
+{% endblock %}

@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+
+{% block content %}
+{% if not request.user.is_superuser %}
+<a href="{% url 'manager:altruist-update' altruist.id %}">Edit {{ altruist.url | safe }}</a>
+{% else %}
+{{ altruist.url | safe }}
+{% endif %}
+<p class='mx-4'>
+  Total session served {{ total_logs }}
+</p>
+<div class='pagination justify-content-center'>
+
+  {% if logs.has_previous %}
+    <a href='{% url "manager:altruist-detail" altruist.id logs.previous_page_number %}'>Previous </a>
+  {% endif %}
+
+  <span class='mx-4'>
+    Page {{ logs.number }} of {{ logs.paginator.num_pages }}
+  </span>
+
+  {% if logs.has_next %}
+    <a href='{% url "manager:altruist-detail" altruist.id logs.next_page_number %}' > Next</a>
+  {% endif %}
+</div>
+
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Start data</th>
+        <th>Finish date</th>
+        <th>Duration (sec)</th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for l in logs %}
+    <tr>
+      <td>{{ l.start_time | date:"d.m H:i:s" }}</td>
+      <td>{{ l.finish_time | date:"d.m H:i:s" }}</td>
+      <td>{{ l.duration }}</td>
+    </tr>
+  {% empty %}
+    <tr>
+      <td colspan="3">This Altruist were never selected to serve.</td>
+    </tr>
+  {% endfor %}
+    </tbody>
+  </table>
+
+
+
+{% endblock %}
