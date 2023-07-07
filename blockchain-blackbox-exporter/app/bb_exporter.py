@@ -229,6 +229,28 @@ def get_metrics():
             nodeSyncing.set(sync)
             nodeSyncingDuration.set(time.perf_counter_ns() - t0)
 
+        # SUI
+        elif chainid in ["0076"]:
+            t0 = time.perf_counter_ns()
+            block = rpcRequest(target,
+                                '{"jsonrpc":"2.0", "method":"sui_getLatestCheckpointSequenceNumber","id":1}'
+                                )
+            lastBlockDuration.set(time.perf_counter_ns() - t0)
+            # lastBlockAge.set(NOT_DEFINED)
+
+            lastBlockNumber.set(int(block["result"]))
+
+            # t0 = time.perf_counter_ns()
+            # syncing = rpcRequest(target,
+            #                     '{"jsonrpc": "2.0", "id": "dontcare", "method": "status", "params": []}'
+            #                     )["result"]["sync_info"]["syncing"]
+            # if syncing == False:
+            #     sync = 0
+            # else:
+            #     sync = 1
+            # nodeSyncing.set(0)
+            # nodeSyncingDuration.set(0)
+
         else:
             # Default do EVM requests
 
