@@ -5,11 +5,12 @@ import logging
 import os
 import requests
 from http import HTTPStatus
-# import time
+import sys
 import json
 from django.db.models import Count, Sum, Value, Case, When
 from django.utils import timezone
 import datetime
+from urllib.parse import urlparse
 
 from django.conf import settings
 
@@ -50,10 +51,37 @@ def update_altruist_phd(
         "Authorization": f"{PHD_API_KEY}"
     }
 
-    resp = requests.put(f"{PHD_BASE_URL}/v1/blockchain/{chain_id}",
-                        headers = headers,
-                        json = {"altruist": altruist},
-                        timeout=REQ_TIMEOUT)
+    resp = requests.get(f"{PHD_BASE_URL}/v2/chain/{chain_id}",
+                                headers = headers,
+                                timeout=REQ_TIMEOUT)
+    if resp.status_code != HTTPStatus.OK :
+        logging.error(f"""Couldn't GET chain {chain_id}:
+                            Response code: {resp.status_code}, content: {resp.content}""")
+        return False
+
+    altruist_parsed = urlparse(altruist)
+    noauth_url = f"{altruist_parsed.scheme}://{altruist_parsed.hostname}:{altruist_parsed.port}{altruist_parsed.path}"
+    if altruist_parsed.username == None:
+        auth_type = "none"
+        auth = ""
+    else:
+        auth_type = "basic_auth"
+        auth = f"{altruist_parsed.username}:{altruist_parsed.password}"
+
+    chain_conf = json.loads(resp.text)
+    chain_conf["altruists"] = {
+        noauth_url: {
+            "url": noauth_url,
+            "auth": auth,
+            "authType": auth_type
+        }
+    }
+    logging.debug("Updated chainconfig: ", chain_conf)
+
+    resp = requests.put(f"{PHD_BASE_URL}/v2/chain",
+                            headers = headers,
+                            json = chain_conf,
+                            timeout=REQ_TIMEOUT)
 
     if resp.status_code == HTTPStatus.OK :
         logging.info(f"Updated altruist {chain_id}: {altruist}")
@@ -96,8 +124,8 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
 
         now_minus_1h = timezone.now() - datetime.timedelta(hours=1)
-
-        for chain in Chain.objects.all():    #filter(chain_id = "0021"):  #
+        ERROR_COUNTER = 0
+        for chain in Chain.objects.filter(chain_id = "0070"):  #all():    #
             healthy_altruists = get_healthy_altruists(chainid = chain.chain_id)
 
             # select available altruists ordered by num of logs wthin last hour
@@ -121,3 +149,8 @@ class Command(BaseCommand):
                         break
                     else:
                         logging.error(f"Couldn't update altruist {a.chain_id}: {a.url}")
+                        ERROR_COUNTER+=1
+
+
+        if ERROR_COUNTER > 0 :
+            sys.exit(1)
