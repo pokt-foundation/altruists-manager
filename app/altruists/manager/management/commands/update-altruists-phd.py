@@ -33,7 +33,7 @@ logging.basicConfig(
 # if os.environ.get('DJANGO_DEBUG', 'True').upper() == "TRUE":
 #     logging.setLevel(logging.DEBUG)
 
-print(f"Effective logging level is {logging.getEffectiveLevel()}")
+# print(f"Effective logging level is {logging.getEffectiveLevel()}")
 ##################################
 def update_servinglog(altruist: Altruist):
 
