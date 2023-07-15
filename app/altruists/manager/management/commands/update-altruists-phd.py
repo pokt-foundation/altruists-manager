@@ -24,12 +24,15 @@ PHD_API_KEY = os.environ.get('PHD_API_KEY')
 #Timeout     (Connect, Read)
 REQ_TIMEOUT = (5,15)
 
-logging_level = logging.DEBUG if os.environ.get('DJANGO_DEBUG', 'True').upper() == "TRUE" else logging.INFO
 logging.basicConfig(
     format='%(asctime)s %(name)-12s %(levelname)-8s %(message)s',
-    level=logging_level,
+    level=logging.INFO,
     datefmt='%Y-%m-%d %H:%M:%S')
+logging_level = logging.DEBUG 
+if os.environ.get('DJANGO_DEBUG', 'True').upper() == "TRUE":
+    logging.setLevel(logging.DEBUG)
 
+print(f"Effective logging level is {logging.getEffectiveLevel()}")
 ##################################
 def update_servinglog(altruist: Altruist):
 
@@ -68,6 +71,9 @@ def update_altruist_phd(
     else:
         auth_type = "basic_auth"
         auth = f"{altruist_parsed.username}:{altruist_parsed.password}"
+
+    logging.debug(f"Altruist: {altruist}")
+    logging.debug("Altruist parsed:", altruist_parsed)
 
     chain_conf = json.loads(resp.text)
     chain_conf["altruists"] = {
