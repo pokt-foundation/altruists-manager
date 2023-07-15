@@ -9,6 +9,8 @@ on:
   push:
     branches:
       - master
+    paths:
+      - 'blockchain-blackbox-exporter/**'
   pull_request:
     branches: [ "master" ]
 
