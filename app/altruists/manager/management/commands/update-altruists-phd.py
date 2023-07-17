@@ -1,5 +1,8 @@
 from django.core.management.base import BaseCommand, CommandError
 from manager.models import Chain, Altruist, AltruistServingLog
+from django.db.models import Count, Sum, Value, Case, When
+from django.utils import timezone
+from django.conf import settings
 
 import logging
 import os
@@ -7,12 +10,8 @@ import requests
 from http import HTTPStatus
 import sys
 import json
-from django.db.models import Count, Sum, Value, Case, When
-from django.utils import timezone
 import datetime
 from urllib.parse import urlparse
-
-from django.conf import settings
 
 # Victoria Metrics/Prom address
 VM_ADDRESS = os.environ.get('VM_ADDRESS')
@@ -24,16 +23,10 @@ PHD_API_KEY = os.environ.get('PHD_API_KEY')
 #Timeout     (Connect, Read)
 REQ_TIMEOUT = (5,15)
 
-logging_level = logging.DEBUG if os.environ.get('DJANGO_DEBUG', 'True').upper() == "TRUE" else logging.INFO
-logging.basicConfig(
-    format='%(asctime)s %(name)-12s %(levelname)-8s %(message)s',
-    level=logging_level,
-    datefmt='%Y-%m-%d %H:%M:%S')
+if os.environ.get('DJANGO_DEBUG', 'True').upper() == "TRUE":
+    logging.getLogger().setLevel(logging.DEBUG)
 
-# if os.environ.get('DJANGO_DEBUG', 'True').upper() == "TRUE":
-#     logging.setLevel(logging.DEBUG)
-
-# print(f"Effective logging level is {logging.getEffectiveLevel()}")
+logging.debug('DEBUG level active')
 ##################################
 def update_servinglog(altruist: Altruist):
 
@@ -56,16 +49,19 @@ def update_altruist_phd(
         "Authorization": f"{PHD_API_KEY}"
     }
 
-    resp = requests.get(f"{PHD_BASE_URL}/v2/chain/{chain_id}",
-                                headers = headers,
-                                timeout=REQ_TIMEOUT)
-    if resp.status_code != HTTPStatus.OK :
-        logging.error(f"""Couldn't GET chain {chain_id}:
-                            Response code: {resp.status_code}, content: {resp.content}""")
-        return False
-
     altruist_parsed = urlparse(altruist)
-    noauth_url = f"{altruist_parsed.scheme}://{altruist_parsed.hostname}:{altruist_parsed.port}{altruist_parsed.path}"
+    if altruist_parsed.port == None:
+        if altruist_parsed.scheme == "https":
+            port = 443
+        elif altruist_parsed.scheme == "http":
+            port = 80
+        else:
+            logging.error(f"Wrong altruist's scheme: {altruist}")
+            port = altruist_parsed.port # it'll be None so will fail on the request
+    else:
+        port = altruist_parsed.port
+
+    noauth_url = f"{altruist_parsed.scheme}://{altruist_parsed.hostname}:{port}{altruist_parsed.path}"
     if altruist_parsed.username == None:
         auth_type = "none"
         auth = ""
@@ -74,22 +70,24 @@ def update_altruist_phd(
         auth = f"{altruist_parsed.username}:{altruist_parsed.password}"
 
     logging.debug(f"Altruist: {altruist}")
-    logging.debug("Altruist parsed:", altruist_parsed)
+    logging.debug(f"Altruist parsed noauth_url: {noauth_url} auth: {auth} auth_type: {auth_type}")
 
-    chain_conf = json.loads(resp.text)
-    chain_conf["altruists"] = {
-        noauth_url: {
-            "url": noauth_url,
-            "auth": auth,
-            "authType": auth_type
+    chain_conf = {
+        "altruists": {
+            noauth_url: {
+                "url": noauth_url,
+                "auth": auth,
+                "authType": auth_type
+            }
         }
     }
-    logging.debug("Updated chainconfig: ", chain_conf)
+    logging.debug(f"New chain's conf: \n{json.dumps(chain_conf, indent=4)}" )
 
-    resp = requests.put(f"{PHD_BASE_URL}/v2/chain",
+    resp = requests.put(f"{PHD_BASE_URL}/v2/chain/{chain_id}",
                             headers = headers,
                             json = chain_conf,
                             timeout=REQ_TIMEOUT)
+    logging.debug(f"PUT request response text: \n{json.dumps(json.loads(resp.text), indent=4)}" )
 
     if resp.status_code == HTTPStatus.OK :
         logging.info(f"Updated altruist {chain_id}: {altruist}")
@@ -133,7 +131,7 @@ class Command(BaseCommand):
 
         now_minus_1h = timezone.now() - datetime.timedelta(hours=1)
         ERROR_COUNTER = 0
-        for chain in Chain.objects.filter(chain_id = "0070"):  #all():    #
+        for chain in Chain.objects.all():    #filter(chain_id = "0070"):  #
             healthy_altruists = get_healthy_altruists(chainid = chain.chain_id)
 
             # select available altruists ordered by num of logs wthin last hour
