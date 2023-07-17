@@ -145,6 +145,11 @@ LOGIN_URL = '/login/'
 
 LOGIN_REDIRECT_URL = '/altruist/'
 
+if os.environ.get('DJANGO_DEBUG', 'True').upper() == "TRUE":
+    logging_level = "DEBUG"
+else:
+    logging_level = "INFO"
+
 LOGGING = {
    'version': 1,
    'disable_existing_loggers': False,
@@ -155,7 +160,7 @@ LOGGING = {
    },
    'handlers': {
        'console': {
-           'level': 'INFO',
+           'level': logging_level,
            'class': 'logging.StreamHandler',
            'stream': sys.stdout,
            'formatter': 'verbose'
