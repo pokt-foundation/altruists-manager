@@ -90,10 +90,10 @@ def update_altruist_phd(
     logging.debug(f"PUT request response text: \n{json.dumps(json.loads(resp.text), indent=4)}" )
 
     if resp.status_code == HTTPStatus.OK :
-        logging.info(f"Updated altruist {chain_id}: {altruist}")
+        logging.info(f"Updated altruist {chain_id}: {noauth_url}")
         return True
 
-    logging.error(f"""Couldn't update altruist {chain_id}: {altruist}
+    logging.error(f"""Couldn't update altruist {chain_id}: {noauth_url}
                             Response code: {resp.status_code}, content: {resp.content}""")
     return False
 
@@ -151,10 +151,10 @@ class Command(BaseCommand):
                     # Update altruist in PHD and add log
                     if update_altruist_phd(chain.chain_id, a.url) :
                         update_servinglog(a)
-                        logging.info(f"Changed altruist: {a.url}, served {a.last_hour_sessions_number} times within last hour for {a.chain_id}")
+                        logging.info(f"Changed altruist for {a.chain_id}, served {a.last_hour_sessions_number} times within last hour.")
                         break
                     else:
-                        logging.error(f"Couldn't update altruist {a.chain_id}: {a.url}")
+                        logging.error(f"Couldn't update altruist {a.chain_id}")
                         ERROR_COUNTER+=1
 
 
