@@ -10,6 +10,9 @@ from kubernetes import client, config
 from kubernetes.client.rest import ApiException
 import hashlib
 
+if os.environ.get('DJANGO_DEBUG', 'True').upper() == "TRUE":
+    logging.getLogger().setLevel(logging.DEBUG)
+logging.debug('DEBUG level active')
 #K8s ns where to deploy the ConfigMap
 NAMESPACE = os.environ.get('NAMESPACE')
 #SCRAPE_CONFIGMAP
@@ -46,10 +49,6 @@ global:
 scrape_configs:
 {{ jobs }}
 """
-logging.basicConfig(
-    format='%(asctime)s %(name)-12s %(levelname)-8s %(message)s',
-    level=logging.INFO,
-    datefmt='%Y-%m-%d %H:%M:%S')
 
 def update_configmap(cm_data: str, k8s_client):
     cm_data_md5 = hashlib.md5(cm_data.encode()).hexdigest()
